@@ -1,27 +1,118 @@
+const {
+default: makeWASocket,
+useMultiFileAuthState
+}=require("@whiskeysockets/baileys")
+
+const pino=require("pino")
+const qrcode=require("qrcode-terminal")
+
+const catalog=require("./catalog")
+
+
+const OWNER=[
+"6285828169882"
+]
+
+
+async function startBot(){
+
+const {state,saveCreds}=await useMultiFileAuthState(
+"./session"
+)
+
+
+const sock=makeWASocket({
+
+auth:state,
+
+logger:pino({
+level:"silent"
+})
+
+})
+
+
+sock.ev.on(
+"creds.update",
+saveCreds
+)
+
+
+sock.ev.on(
+"connection.update",
+(update)=>{
+
+const {connection,qr}=update
+
+
+if(qr){
+
+qrcode.generate(qr,{
+small:true
+})
+
+}
+
+
+if(connection==="open"){
+
+console.log(
+"🎀 NZstore Bot Online"
+)
+
+}
+
+})
+
+
+sock.ev.on(
+"messages.upsert",
+async({messages})=>{
+
+
+const msg=messages[0]
+
+if(!msg.message)
+return
+
+
+// hanya grup
+
+if(!msg.key.remoteJid.endsWith("@g.us"))
+return
+
+
+const text =
+(
+msg.message.conversation ||
+msg.message.extendedTextMessage?.text ||
+""
+).toLowerCase()
+
+
+
+// MENU
+
+if(text=="menu"){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:
+`
 🎀 Welcome to NZstore 🛒✨
 
-Terima kasih sudah bergabung di NZstore.
+Terima kasih sudah bergabung.
 
 Gunakan bot untuk:
 
 🛒 Cek Produk
 💰 Cek Harga
 📦 Bantuan Order
-💳 Informasi Payment
-
-Ketik:
-
-MENU
-
-untuk melihat layanan bot.
-
-
-━━━━━━━━━━━━━━
+💳 Payment
 
 
 🎀 NZstore MENU
-
-Silakan pilih:
 
 🛒 Produk
 💰 Harga
@@ -29,42 +120,94 @@ Silakan pilih:
 📦 Cara Order
 💳 Payment
 👤 Admin
-❓ Bantuan
 
-Ketik nama menu yang ingin dilihat.
+Ketik nama menu.
+`
+})
 
-
-━━━━━━━━━━━━━━
-
-
-📦 CARA ORDER NZSTORE
-
-1. Pilih produk dan paket yang diinginkan.
-2. Wajib tanyakan stock terlebih dahulu kepada admin.
-3. Tunggu konfirmasi ketersediaan produk.
-4. Setelah admin konfirmasi, kirim FORMAT ORDER.
-5. Lakukan pembayaran sesuai metode yang tersedia.
-6. Kirim bukti pembayaran ke admin.
-7. Pesanan akan diproses.
+}
 
 
-━━━━━━━━━━━━━━
+
+// KATALOG
+
+if(text=="capcut"){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:catalog.capcut
+})
+
+}
 
 
-🛒 FORMAT ORDER
+if(text=="canva"){
 
-Nama:
-Produk:
-Paket:
-Jumlah:
-Metode Pembayaran:
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:catalog.canva
+})
 
-Pastikan data yang diberikan sudah benar.
-
-
-━━━━━━━━━━━━━━
+}
 
 
+if(text=="netflix"){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:catalog.netflix
+})
+
+}
+
+
+if(text=="spotify"){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:catalog.spotify
+})
+
+}
+
+
+if(text=="kebsos"){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:catalog.kebsos
+})
+
+}
+
+
+
+if(text=="premium"){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:catalog.premium_lainnya
+})
+
+}
+
+
+
+// PAYMENT
+
+if(text=="payment"){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:
+`
 💳 PAYMENT NZstore
 
 GoPay
@@ -72,7 +215,7 @@ GoPay
 Nomor:
 085828626140
 
-Atas Nama:
+A/N:
 Zhraa
 
 
@@ -81,56 +224,137 @@ Setelah pembayaran:
 Kirim bukti pembayaran ke admin.
 
 Pembayaran tanpa bukti tidak dapat diproses.
+`
+})
+
+}
 
 
-━━━━━━━━━━━━━━
+
+// ORDER
+
+if(text=="order"){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:
+`
+📦 FORMAT ORDER NZstore
+
+Produk:
+Paket:
+Nama:
+
+Untuk KEBsos:
+
+Produk:
+Paket:
+Jumlah:
+Username/Link:
+Nama:
 
 
+Pastikan data order benar.
+`
+})
+
+}
+
+
+
+// RULES
+
+if(text=="rules"){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:
+`
 📌 RULES ORDER NZSTORE
 
-✦ Wajib tanyakan stock terlebih dahulu sebelum bayar.
+• Wajib tanya stock sebelum bayar.
+• Tunggu konfirmasi admin lalu kirim FORMAT ORDER.
+• Pastikan produk dan paket benar.
+• Pastikan data/email/username benar.
+• Kesalahan pembeli di luar tanggung jawab admin.
+• Wajib SS login 1x/24 jam.
+• Tanpa SS tidak ada garansi.
+• Produk tanpa garansi tidak dapat komplain.
+• Klaim garansi harap sabar.
+• Komplain melalui chat pribadi admin.
+• Jangan ubah atau bagikan akun.
+• Pesanan diproses tidak dapat refund.
 
-✦ Tunggu konfirmasi admin, lalu kirim FORMAT ORDER.
+Dengan pembayaran, buyer dianggap menyetujui ketentuan NZstore.
+`
+})
 
-✦ Pastikan memilih produk dan paket yang benar.
-
-✦ Pastikan data/email/username yang diberikan benar.
-
-✦ Kesalahan pembeli di luar tanggung jawab admin.
-
-✦ Wajib SS login 1x/24 jam, tanpa SS tidak ada garansi.
-
-✦ Produk tanpa klaim garansi tidak dapat komplain.
-
-✦ Garansi mengikuti ketentuan masing-masing produk.
-
-✦ Klaim garansi harap sabar mengikuti antrean.
-
-✦ Jika terjadi kendala, jangan mengubah data akun dan langsung chat admin.
-
-✦ Jangan mengubah data akun tanpa izin admin.
-
-✦ Jangan membagikan akun jika paket Private.
-
-✦ Paket Sharing digunakan sesuai ketentuan paket.
-
-✦ Tidak semua produk memiliki sistem aktivasi yang sama.
-
-✦ Semua pesanan yang sudah diproses tidak dapat refund.
-
-✦ Komplain produk hubungi admin melalui chat pribadi.
+}
 
 
-Dengan melakukan pembayaran, buyer dianggap telah membaca dan menyetujui ketentuan NZstore.
 
+// ADMIN
 
-━━━━━━━━━━━━━━
+if(text=="admin"){
 
-
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:
+`
 👤 ADMIN NZstore
 
-Untuk bantuan order atau komplain produk:
+Bantuan order dan komplain:
 
 Chat admin pribadi:
 
 085828169882
+`
+})
+
+}
+
+
+
+// ADMIN PANEL
+
+const sender=
+msg.key.participant?.replace(
+"@s.whatsapp.net",
+""
+)
+
+
+if(
+text=="/admin" &&
+OWNER.includes(sender)
+){
+
+await sock.sendMessage(
+msg.key.remoteJid,
+{
+text:
+`
+👑 NZstore ADMIN PANEL
+
+/status
+/addproduk
+/hapusproduk
+/broadcast
+
+Admin aktif.
+`
+})
+
+}
+
+
+})
+
+
+}
+
+
+startBot()
