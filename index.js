@@ -1,109 +1,22 @@
-const {
-default: makeWASocket,
-useMultiFileAuthState
-}=require("@whiskeysockets/baileys")
-
-const pino=require("pino")
-const qrcode=require("qrcode-terminal")
-
-
-const OWNER=[
-"6285828169882"
-]
-
-
-async function start(){
-
-const {state,saveCreds}=await useMultiFileAuthState(
-"./session"
-)
-
-
-const sock=makeWASocket({
-
-auth:state,
-
-logger:pino({
-level:"silent"
-})
-
-})
-
-
-sock.ev.on(
-"creds.update",
-saveCreds
-)
-
-
-sock.ev.on(
-"connection.update",
-(update)=>{
-
-if(update.qr){
-
-qrcode.generate(
-update.qr,
-{
-small:true
-}
-)
-
-}
-
-
-if(update.connection==="open"){
-
-console.log(
-"🎀 NZstore Bot Online"
-)
-
-}
-
-})
-
-
-sock.ev.on(
-"messages.upsert",
-async({messages})=>{
-
-
-const msg=messages[0]
-
-if(!msg.message)
-return
-
-
-// hanya aktif di grup
-
-if(!msg.key.remoteJid.endsWith("@g.us"))
-return
-
-
-const text =
-msg.message.conversation || ""
-
-
-
-// MENU
-
-if(text.toLowerCase()=="menu"){
-
-await sock.sendMessage(
-msg.key.remoteJid,
-{
-text:
-`
 🎀 Welcome to NZstore 🛒✨
 
-Terima kasih sudah bergabung.
+Terima kasih sudah bergabung di NZstore.
 
 Gunakan bot untuk:
 
-🛒 Cek produk
-💰 Cek harga
-📦 Bantuan order
-💳 Informasi payment
+🛒 Cek Produk
+💰 Cek Harga
+📦 Bantuan Order
+💳 Informasi Payment
+
+Ketik:
+
+MENU
+
+untuk melihat layanan bot.
+
+
+━━━━━━━━━━━━━━
 
 
 🎀 NZstore MENU
@@ -118,24 +31,40 @@ Silakan pilih:
 👤 Admin
 ❓ Bantuan
 
-
 Ketik nama menu yang ingin dilihat.
-`
-})
-
-}
 
 
+━━━━━━━━━━━━━━
 
-// PAYMENT
 
-if(text.toLowerCase()=="payment"){
+📦 CARA ORDER NZSTORE
 
-await sock.sendMessage(
-msg.key.remoteJid,
-{
-text:
-`
+1. Pilih produk dan paket yang diinginkan.
+2. Wajib tanyakan stock terlebih dahulu kepada admin.
+3. Tunggu konfirmasi ketersediaan produk.
+4. Setelah admin konfirmasi, kirim FORMAT ORDER.
+5. Lakukan pembayaran sesuai metode yang tersedia.
+6. Kirim bukti pembayaran ke admin.
+7. Pesanan akan diproses.
+
+
+━━━━━━━━━━━━━━
+
+
+🛒 FORMAT ORDER
+
+Nama:
+Produk:
+Paket:
+Jumlah:
+Metode Pembayaran:
+
+Pastikan data yang diberikan sudah benar.
+
+
+━━━━━━━━━━━━━━
+
+
 💳 PAYMENT NZstore
 
 GoPay
@@ -152,124 +81,56 @@ Setelah pembayaran:
 Kirim bukti pembayaran ke admin.
 
 Pembayaran tanpa bukti tidak dapat diproses.
-`
-})
-
-}
 
 
-
-// ORDER
-
-if(text.toLowerCase()=="order"){
-
-await sock.sendMessage(
-msg.key.remoteJid,
-{
-text:
-`
-📦 FORMAT ORDER NZstore
-
-Nama:
-Produk:
-Paket:
-Jumlah:
-Metode Pembayaran:
+━━━━━━━━━━━━━━
 
 
-Sebelum order wajib menunggu konfirmasi stock dari admin.
-`
-})
-
-}
-
-
-
-// RULES
-
-if(text.toLowerCase()=="rules"){
-
-await sock.sendMessage(
-msg.key.remoteJid,
-{
-text:
-`
 📌 RULES ORDER NZSTORE
 
-• Sebelum TF wajib tanya stock ready/tidak.
-• Tunggu konfirmasi admin, lalu kirim FORMAT ORDER.
-• Wajib SS login 1x/24 jam, tanpa SS tidak ada garansi.
-• Produk tanpa garansi tidak dapat komplain.
-• Klaim garansi harap sabar mengikuti antrean.
-• Komplain produk melalui chat pribadi admin.
-• Pesanan yang sudah diproses tidak dapat refund.
-• Kesalahan pembeli di luar tanggung jawab admin.
-• Jangan ubah atau bagikan data akun.
-`
-})
+✦ Wajib tanyakan stock terlebih dahulu sebelum bayar.
 
-}
+✦ Tunggu konfirmasi admin, lalu kirim FORMAT ORDER.
+
+✦ Pastikan memilih produk dan paket yang benar.
+
+✦ Pastikan data/email/username yang diberikan benar.
+
+✦ Kesalahan pembeli di luar tanggung jawab admin.
+
+✦ Wajib SS login 1x/24 jam, tanpa SS tidak ada garansi.
+
+✦ Produk tanpa klaim garansi tidak dapat komplain.
+
+✦ Garansi mengikuti ketentuan masing-masing produk.
+
+✦ Klaim garansi harap sabar mengikuti antrean.
+
+✦ Jika terjadi kendala, jangan mengubah data akun dan langsung chat admin.
+
+✦ Jangan mengubah data akun tanpa izin admin.
+
+✦ Jangan membagikan akun jika paket Private.
+
+✦ Paket Sharing digunakan sesuai ketentuan paket.
+
+✦ Tidak semua produk memiliki sistem aktivasi yang sama.
+
+✦ Semua pesanan yang sudah diproses tidak dapat refund.
+
+✦ Komplain produk hubungi admin melalui chat pribadi.
 
 
+Dengan melakukan pembayaran, buyer dianggap telah membaca dan menyetujui ketentuan NZstore.
 
-// ADMIN
 
-if(text.toLowerCase()=="admin"){
+━━━━━━━━━━━━━━
 
-await sock.sendMessage(
-msg.key.remoteJid,
-{
-text:
-`
+
 👤 ADMIN NZstore
 
 Untuk bantuan order atau komplain produk:
 
-Silakan chat admin pribadi.
+Chat admin pribadi:
 
-Admin:
 085828169882
-`
-})
-
-}
-
-
-
-// ADMIN PANEL
-
-const sender =
-msg.key.participant || msg.key.remoteJid
-
-
-if(
-text.toLowerCase()=="/admin" &&
-OWNER.includes(sender.replace("@s.whatsapp.net",""))
-){
-
-await sock.sendMessage(
-msg.key.remoteJid,
-{
-text:
-`
-👑 NZstore ADMIN PANEL
-
-/status
-/produk
-/addproduk
-/broadcast
-
-Admin aktif.
-`
-})
-
-}
-
-
-})
-
-
-}
-
-
-start()
