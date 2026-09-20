@@ -1,0 +1,14 @@
+{
+  "name": "nz-bot-group",
+  "version": "1.0.0",
+  "description": "NZ WhatsApp Group Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "latest",
+    "pino": "latest",
+    "qrcode-terminal": "latest"
+  }
+}
